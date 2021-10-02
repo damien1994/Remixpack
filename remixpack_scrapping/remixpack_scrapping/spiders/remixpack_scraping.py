@@ -12,10 +12,16 @@ class SpiderRemixpackScraping(Spider):
     # nom du spider
     name = "remixpack_scraping"
     # URL de la page à scrapper
-    url = 'https://remixpacks.ru/'
+    domain_url = 'https://remixpacks.ru'
 
     def start_requests(self):
-        yield Request(url=self.url, callback=self.parse)
+        yield Request(url=self.domain_url, callback=self.parse_pageNumbers)
+
+    def parse_pageNumbers(self, response):
+        last_page = set(response.css('div.wp-pagenavi a.last').re(r'\d+')).pop()
+        for number_page in range(1, int(last_page)):
+            url = f'{self.domain_url}/page/{number_page}/'
+            yield Request(url=url, callback=self.parse)
 
     def parse(self, response):
         # select all divs whose class is genres1 genrescomp
@@ -40,4 +46,3 @@ class SpiderRemixpackScraping(Spider):
             item['mb'] = mb
             item['tags'] = tags_list
             yield item
-
